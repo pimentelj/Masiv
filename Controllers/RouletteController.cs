@@ -57,7 +57,7 @@ namespace Test.Controllers
             {
                 return NotFound();
             }
-            if(roulette.Open == true){
+            if(roulette.Open){
                 Random r = new Random();
                 int number = r.Next(0,36);
                 TypeColor color = (number % 2 == 0) ? TypeColor.Red : TypeColor.Black;
@@ -89,7 +89,7 @@ namespace Test.Controllers
             {
                 return NotFound();
             }
-            if(roulette.Open){
+            if(!roulette.Open){
                 var bets = await _context.bets.Where(c => c.RouletteId == id).ToListAsync();
                 foreach (var bet in bets)
                 {
