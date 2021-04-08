@@ -1,4 +1,4 @@
 public enum TypeColor { 
-    Red = 0, 
+    Red = 2, 
     Black = 1
 }

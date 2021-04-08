@@ -41,7 +41,6 @@ namespace Test.Controllers
         public async Task<ActionResult<Roulette>> GetRoulette(long id)
         {
             var roulette = await _context.roulettes.FindAsync(id);
-
             if (roulette == null)
             {
                 return NotFound();
@@ -49,37 +48,6 @@ namespace Test.Controllers
 
             return roulette;
         }
-
-        // PUT: api/Roulette/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        /*[HttpPut("close/{id}")]
-        public async Task<IActionResult> PutRoulette(long id, Roulette roulette)
-        {
-            if (id != roulette.Id)
-            {
-                return BadRequest();
-            }
-
-            _context.Entry(roulette).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!RouletteExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
-        }*/
 
         [HttpPut("close/{id}")]
         public async Task<IActionResult> CloseRoulette(long id)
@@ -89,10 +57,28 @@ namespace Test.Controllers
             {
                 return NotFound();
             }
-            roulette.Open = false;
-            await _context.SaveChangesAsync();
+            if(roulette.Open == true){
+                Random r = new Random();
+                int number = r.Next(0,36);
+                TypeColor color = (number % 2 == 0) ? TypeColor.Red : TypeColor.Black;
+                var winNumber = await _context.bets.Where(c => c.Number == number).ToListAsync();
+                var winColor = await _context.bets.Where(c => c.Color == color).ToListAsync();                
+                foreach (var win in winNumber)
+                {
+                    win.Money = win.Money * 5;
+                }
+                foreach (var win in winColor)
+                {
+                    win.Money = Convert.ToInt32(Convert.ToDouble(win.Money) * 1.8);
+                }
+                roulette.Number = number;
+                roulette.Open = false;
+                await _context.SaveChangesAsync();
 
-            return Ok(new {message = "Ruleta close"});
+                return Ok(new {message = "Ruleta cerrada", number = number, color = color.ToString()});
+            }else{
+                return BadRequest(new {message = "La ruleta ya se encuentra cerrada"});
+            }
         }
 
         [HttpPut("open/{id}")]
@@ -103,10 +89,19 @@ namespace Test.Controllers
             {
                 return NotFound();
             }
-            roulette.Open = true;
-            await _context.SaveChangesAsync();
+            if(roulette.Open){
+                var bets = await _context.bets.Where(c => c.RouletteId == id).ToListAsync();
+                foreach (var bet in bets)
+                {
+                    _context.bets.Remove(bet);
+                }
+                roulette.Open = true;
+                await _context.SaveChangesAsync();
 
-            return Ok(new {message = "Ruleta abierta"});
+                return Ok(new {message = "Ruleta abierta"});
+            }else{
+                return BadRequest(new {message = "La ruleta ya se encuentra abierta"});
+            }
         }
 
         [HttpPut("bet/{id}")]
@@ -118,9 +113,9 @@ namespace Test.Controllers
                 return NotFound();
             }
             if(roulette.Open == true){                
-                var bets = _context.bets.Where(c => c.RouletteId == id);
+                var bets = await _context.bets.Where(c => c.RouletteId == id).ToListAsync();
                 int sum = 0;
-                foreach (var bet in bets ){
+                foreach (var bet in bets){
                     sum += bet.Money;
                 }
                 if(sum + model.Money <= 10000){
@@ -138,6 +133,7 @@ namespace Test.Controllers
                         bet.Number = model.Number;
                         bet.Money = model.Money;
                         _context.bets.Add(bet);
+                        user.Money = user.Money - model.Money;
                         await _context.SaveChangesAsync();
                     }else{
                         return BadRequest(new {message = "No tienes suficiente dinero para realizar esta apuesta"});
@@ -176,7 +172,6 @@ namespace Test.Controllers
             {
                 return NotFound();
             }
-
             _context.roulettes.Remove(roulette);
             await _context.SaveChangesAsync();
 

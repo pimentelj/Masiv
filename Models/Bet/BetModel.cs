@@ -9,7 +9,7 @@ namespace Test.Models.Bet
         [Key]
         public long Id { get; set; }
         public long RouletteId { get; set; }
-        public Test.Entities.Roulette roulette { get; set; }
+        public Test.Entities.Roulette Roulette { get; set; }
         public int UserId { get; set; }
         public User User { get; set; }
         public int Number { get; set; }
