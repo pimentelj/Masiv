@@ -49,6 +49,7 @@ namespace Test.Controllers
             return roulette;
         }
 
+        // PUT: api/Roulette/close/5
         [HttpPut("close/{id}")]
         public async Task<IActionResult> CloseRoulette(long id)
         {
@@ -81,6 +82,7 @@ namespace Test.Controllers
             }
         }
 
+        // PUT: api/Roulette/open/5
         [HttpPut("open/{id}")]
         public async Task<IActionResult> OpenRoulette(long id)
         {
@@ -104,6 +106,7 @@ namespace Test.Controllers
             }
         }
 
+        // PUT: api/Roulette/bet/5
         [HttpPut("bet/{id}")]
         public async Task<ActionResult<Roulette>> PostBet(long id, [FromBody]CreateBetModel model)
         {

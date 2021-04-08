@@ -31,16 +31,13 @@ namespace Test.Services
                 return null;
 
             var user = _context.users.SingleOrDefault(x => x.Nickname == username);
-
-            // check if username exists
+            
             if (user == null)
                 return null;
 
-            // check if password is correct
             if (!VerifyPasswordHash(password, user.PasswordHash, user.PasswordSalt))
                 return null;
 
-            // authentication successful
             return user;
         }
 
@@ -56,7 +53,6 @@ namespace Test.Services
 
         public User Create(User user, string password)
         {
-            // validation
             if (string.IsNullOrWhiteSpace(password))
                 throw new AppException("Password es requerido");
 
@@ -65,10 +61,8 @@ namespace Test.Services
 
             byte[] passwordHash, passwordSalt;
             CreatePasswordHash(password, out passwordHash, out passwordSalt);
-
             user.PasswordHash = passwordHash;
             user.PasswordSalt = passwordSalt;
-
             _context.users.Add(user);
             _context.SaveChanges();
 
@@ -78,34 +72,27 @@ namespace Test.Services
         public void Update(User userParam, string password = null)
         {
             var user = _context.users.Find(userParam.Id);
-
             if (user == null)
                 throw new AppException("Usuario no encontrado");
 
-            // update username if it has changed
             if (!string.IsNullOrWhiteSpace(userParam.Nickname) && userParam.Nickname != user.Nickname)
-            {
-                // throw error if the new username is already taken
+            {                
                 if (_context.users.Any(x => x.Nickname == userParam.Nickname))
                     throw new AppException("Nickname " + userParam.Nickname + " no se encuentra disponible");
 
                 user.Nickname = userParam.Nickname;
             }
 
-            // update user properties if provided
             if (!string.IsNullOrWhiteSpace(userParam.Name))
                 user.Name = userParam.Name;
 
-            // update password if provided
             if (!string.IsNullOrWhiteSpace(password))
             {
                 byte[] passwordHash, passwordSalt;
                 CreatePasswordHash(password, out passwordHash, out passwordSalt);
-
                 user.PasswordHash = passwordHash;
                 user.PasswordSalt = passwordSalt;
             }
-
             _context.users.Update(user);
             _context.SaveChanges();
         }
@@ -120,13 +107,10 @@ namespace Test.Services
             }
         }
 
-        // private helper methods
-
         private static void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
         {
             if (password == null) throw new ArgumentNullException("password");
             if (string.IsNullOrWhiteSpace(password)) throw new ArgumentException("El valor no puede estar vacío o tener solo una cadena de espacios en blanco.", "password");
-
             using (var hmac = new System.Security.Cryptography.HMACSHA512())
             {
                 passwordSalt = hmac.Key;
